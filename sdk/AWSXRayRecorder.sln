@@ -27,6 +27,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWSXRayRecorder.Handlers.As
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWSXRayRecorder.Handlers.EntityFramework", "src\Handlers\EntityFramework\AWSXRayRecorder.Handlers.EntityFramework.csproj", "{8C95F2F0-3098-4189-8D05-B2517086AC39}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleEBASPNETCoreApplication", "..\..\..\sample-app\aws-xray-dotnet-webapp\DotNETCore\SampleEBASPNETCoreApplication.csproj", "{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,12 @@ Global
 		{8C95F2F0-3098-4189-8D05-B2517086AC39}.Nuget|Any CPU.Build.0 = Release|Any CPU
 		{8C95F2F0-3098-4189-8D05-B2517086AC39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C95F2F0-3098-4189-8D05-B2517086AC39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}.Nuget|Any CPU.ActiveCfg = Debug|Any CPU
+		{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}.Nuget|Any CPU.Build.0 = Debug|Any CPU
+		{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{400DA36F-CF14-4F26-ABE6-8C3B09AACE54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

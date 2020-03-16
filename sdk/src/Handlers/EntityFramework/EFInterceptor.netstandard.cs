@@ -6,13 +6,17 @@ using Amazon.XRay.Recorder.Core.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
-using System.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace Amazon.XRay.Recorder.Handlers.EntityFramework
 {
-    public class EFInterceptor : Microsoft.EntityFrameworkCore.Diagnostics.DbCommandInterceptor
+    public class EFInterceptor : DbCommandInterceptor
     {
-        private const string DataBaseTypeString = "EntityFramework";
+        // Some database provider may not support Entity Framework 3.0 and above now
+        // https://docs.microsoft.com/en-us/ef/core/providers/?tabs=dotnet-core-cli
+        private readonly string[] databaseTypes = { "mysql" , "sqlserver" , "sqlite" , "postgresql" , "firebird" , "cosmos" ,
+                                                    "oracle" , "filecontextcore" , "jet" , "sqlservercompact35" ,
+                                                    "sqlservercompact40" , "teradata" , "openedge" , "ibm" , "mycat" , "inmemory"};
         private readonly AWSXRayRecorder _recorder;
         private readonly bool? _collectSqlQueriesOverride;
 
@@ -34,7 +38,7 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
 
         public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
         {
-            ProcessBeginCommand(command);
+            ProcessBeginCommand(command, eventData.Context);
             return base.ReaderExecuting(command, eventData, result);
         }
 
@@ -46,7 +50,7 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
 
         public override Task<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
         {
-            ProcessBeginCommand(command);
+            ProcessBeginCommand(command, eventData.Context);
             return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
         }
 
@@ -70,13 +74,13 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
 
         public override InterceptionResult<int> NonQueryExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<int> result)
         {
-            ProcessBeginCommand(command);
+            ProcessBeginCommand(command, eventData.Context);
             return base.NonQueryExecuting(command, eventData, result);
         }
 
         public override Task<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
         {
-            ProcessBeginCommand(command);
+            ProcessBeginCommand(command, eventData.Context);
             return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
         }
 
@@ -94,13 +98,13 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
 
         public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
         {
-            ProcessBeginCommand(command);
+            ProcessBeginCommand(command, eventData.Context);
             return base.ScalarExecuting(command, eventData, result);
         }
 
         public override Task<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
         {
-            ProcessBeginCommand(command);
+            ProcessBeginCommand(command, eventData.Context);
             return base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
         }
 
@@ -116,7 +120,7 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
             return base.ScalarExecutedAsync(command, eventData, result, cancellationToken);
         }
 
-        private void ProcessBeginCommand(DbCommand command)
+        private void ProcessBeginCommand(DbCommand command, DbContext context)
         {
             Entity entity = null;
             try
@@ -128,10 +132,9 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
                 _recorder.TraceContext.HandleEntityMissing(_recorder, e, "Cannot get entity while processing start of Entity Framework command.");
             }
 
-            _recorder.BeginSubsegment(BuildSubsegmentName(command)); //commented because its failing with invalid name due to \\
-            //_recorder.BeginSubsegment("EF_sub");
+            _recorder.BeginSubsegment(BuildSubsegmentName(command)); 
             _recorder.SetNamespace("remote");
-            CollectSqlInformation(command);
+            CollectSqlInformation(command, context);
         }
 
         private void ProcessEndCommand(DbCommand command)
@@ -147,7 +150,6 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
                 return;
             }
 
-            //CollectSqlInformation(command); //moving to processbegincommand so that errors would also have sql info.
             _recorder.EndSubsegment();
         }
 
@@ -172,13 +174,13 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
         /// <summary>
         /// Records the SQL information on the current subsegment,
         /// </summary>
-        protected virtual void CollectSqlInformation(DbCommand command)
+        protected virtual void CollectSqlInformation(DbCommand command, DbContext context)
         {
-            _recorder.AddSqlInformation("database_type", DataBaseTypeString);
+            // Get database type from DbContext
+            string databaseType = GetDataBaseType(context);
+            _recorder.AddSqlInformation("database_type", databaseType);
 
             _recorder.AddSqlInformation("database_version", command.Connection.ServerVersion);
-
-            //SqlConnectionStringBuilder connectionStringBuilder = new SqlConnectionStringBuilder(command.Connection.ConnectionString);
 
             DbConnectionStringBuilder connectionStringBuilder = new DbConnectionStringBuilder();
             connectionStringBuilder.ConnectionString = command.Connection.ConnectionString;
@@ -199,6 +201,23 @@ namespace Amazon.XRay.Recorder.Handlers.EntityFramework
             {
                 _recorder.AddSqlInformation("sanitized_query", command.CommandText);
             }
+        }
+
+        private string GetDataBaseType(DbContext context)
+        {
+            string databaseProvider = context.Database.ProviderName.ToLower();
+            string databaseType = null;
+
+            foreach (string t in databaseTypes)
+            {
+                if (databaseProvider.Contains(t))
+                {
+                    databaseType = t;
+                    break;
+                }
+            }
+
+            return databaseType ?? databaseProvider;
         }
 
         private object GetConnectionValue(DbConnectionStringBuilder builder, string key)
