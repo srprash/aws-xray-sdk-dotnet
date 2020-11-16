@@ -1,0 +1,47 @@
+name: publish_to_nuget
+
+on:
+  workflow_dispatch
+    inputs:
+      version:
+        description: The version to tag the release with
+        required: true
+
+jobs:
+  build_and_pack:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET Core 2.1
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 2.1.x
+
+      - name: Setup .NET Core 3.1
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+
+      - name: Install dependencies
+        run: dotnet restore sdk/AWSXRayRecorder.sln
+
+      - name: Build solution
+        run: dotnet build sdk/AWSXRayRecorder.sln /p:SignAssembly=false
+
+      - name: Dotnet pack
+        run: dotnet pack sdk/AWSXRayRecorder.sln
+
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-packages
+          path: '**/bin/**/*.*nupkg'
