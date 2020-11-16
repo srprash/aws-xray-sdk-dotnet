@@ -1,7 +1,7 @@
 name: publish_to_nuget
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
     inputs:
       version:
         description: The version to tag the release with
