@@ -1,4 +1,4 @@
-name: publish_to_nuget
+name: publish_artifacts
 
 on:
   workflow_dispatch:
