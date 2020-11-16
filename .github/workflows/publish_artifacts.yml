@@ -46,4 +46,7 @@ jobs:
           name: ${{ matrix.os }}-packages
           path: '**/bin/**/*.*nupkg'
 
+      - name: Push to Nuget
+        run: dotnet nuget push **/bin/**/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
+
 
