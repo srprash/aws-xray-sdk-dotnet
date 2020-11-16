@@ -3,18 +3,30 @@ on: [push]
 jobs:
   build_and_test:
     runs-on: windows-latest
+
+    strategy:
+      matrix:
+        version: [net452,net46,net461,netcoreapp2.1,netcoreapp3.1]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v1
-      - name: Setup dotnet
+
+      - name: Setup .NET Core 2.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.1.x
+
+      - name: Setup .NET Core 3.1
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.x' # SDK Version to use; x will use the latest version of the 3.1 channel 
-      - name: Display .Net version
-        run: dotnet --version
+          dotnet-version: 3.1.x
+
       - name: Restore solution
         run: dotnet restore sdk/AWSXRayRecorder.sln
+
       - name: Build solution
         run: dotnet build sdk/AWSXRayRecorder.sln /p:SignAssembly=false
-      - name: Run tests
+
+      - name: Run tests ${{ matrix.version }}
         run: dotnet test sdk/test/UnitTests
