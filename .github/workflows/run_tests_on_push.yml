@@ -1,5 +1,11 @@
-name: run_tests_on_push
-on: [push]
+name: run_tests_on_pull_request
+
+on:
+  pull_request:
+    branches: [ testing_gh_actions ]
+    paths-ignore:
+    - '**.md'
+
 jobs:
   build_and_test:
     runs-on: windows-latest
