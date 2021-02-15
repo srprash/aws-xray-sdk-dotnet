@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "dependencies": {
+    ".NETFramework,Version=v4.5": {
+      "AWSSDK.Core": {
+        "type": "Transitive",
+        "resolved": "3.3.25.2",
+        "contentHash": "NGtmZGeZ7pZ1nEjZ29RD+0NSDZVQihRWfPE2T8J500Pp/p41wHiXAo8Gtfgx5YZUmmqKEYaTcb8h3vw0Wqmbug=="
+      },
+      "awsxrayrecorder.core": {
+        "type": "Project",
+        "dependencies": {
+          "AWSSDK.Core": "3.3.25.2"
+        }
+      }
+    }
+  }
+}
