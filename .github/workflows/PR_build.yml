@@ -30,7 +30,7 @@ jobs:
           run: dotnet restore sdk/AWSXRayRecorder.sln --locked-mode
           
         - name: build SDK
-          run: dotnet build sdk/AWSXRayRecorder.sln
+          run: dotnet build sdk/AWSXRayRecorder.sln --no-restore
           
         - name: run tests
           run: dotnet test sdk/test/UnitTests
