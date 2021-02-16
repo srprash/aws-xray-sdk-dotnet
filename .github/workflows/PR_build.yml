@@ -15,13 +15,14 @@ jobs:
             fail-fast: false
             matrix:
                 os: [windows-latest]
+                version: [net452,netcoreapp2.0]
                 
         steps:
         - uses: actions/checkout@v2
         
-        - uses: actions/setup-dotnet@v1
-          with:
-            dotnet-version: '5.0.x' # SDK Version to use; x will use the latest version of the 5.0 channel
+#        - uses: actions/setup-dotnet@v1
+#          with:
+#            dotnet-version: '5.0.x' # SDK Version to use; x will use the latest version of the 5.0 channel
             
         - name: display dotnet version
           run: dotnet --version
@@ -33,4 +34,4 @@ jobs:
           run: dotnet build sdk/AWSXRayRecorder.sln --no-restore
           
         - name: run tests
-          run: dotnet test sdk/test/UnitTests
+          run: dotnet test sdk/test/UnitTests/bin/**/${{matrix.version}}/AWSXRayRecorder.UnitTests.dll
